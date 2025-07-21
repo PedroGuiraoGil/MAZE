@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laberinto Caleidoscópico</title>
+    <style>
+        /* Estilos generales para el cuerpo de la página */
+        body {
+            margin: 0;
+            overflow: hidden; /* Evita barras de desplazamiento */
+            font-family: 'Inter', sans-serif; /* Fuente moderna */
+            color: #e0e0e0; /* Color de texto claro */
+            background-color: #1a0033; /* Fondo oscuro para el efecto cósmico */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        /* Estilos para el título del juego */
+        h1 {
+            color: #ff66cc; /* Color vibrante */
+            text-shadow: 0 0 10px #ff00ff, 0 0 20px #ff00ff; /* Efecto neón */
+            margin-bottom: 20px;
+            font-size: 2.5em; /* Tamaño de fuente grande */
+            text-align: center;
+        }
+
+        /* Contenedor principal para los niveles 2D */
+        .game-container-2d {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #2a0050; /* Fondo del contenedor */
+            padding: 20px;
+            border-radius: 15px; /* Bordes redondeados */
+            box-shadow: 0 0 25px rgba(255, 0, 255, 0.5), 0 0 50px rgba(100, 0, 200, 0.3); /* Sombra neón */
+            max-width: 90vw; /* Ancho máximo relativo al viewport */
+            max-height: 90vh; /* Alto máximo relativo al viewport */
+            box-sizing: border-box;
+        }
+
+        /* Estilos para el lienzo del juego 2D (donde se dibuja el laberinto) */
+        canvas#gameCanvas2D {
+            border: 3px solid #66ffff; /* Borde cian brillante */
+            background-color: #000; /* Fondo del laberinto */
+            display: block; /* Elimina espacio extra debajo del canvas */
+            border-radius: 10px; /* Bordes redondeados para el canvas */
+            touch-action: none; /* Evita el scroll en dispositivos táctiles */
+            max-width: 100%; /* Asegura que el canvas sea responsivo */
+            height: auto; /* Mantiene la proporción */
+            box-shadow: 0 0 15px rgba(102, 255, 255, 0.7); /* Sombra para el canvas */
+        }
+
+        /* Estilos para el área de mensajes del juego 2D */
+        .game-message-2d {
+            margin-top: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #fff;
+            text-align: center;
+            min-height: 1.5em; /* Espacio reservado para el mensaje */
+        }
+
+        /* Estilos para las instrucciones 2D */
+        .instructions-2d {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #aaa;
+            text-align: center;
+        }
+
+        /* Estilos para el nivel actual 2D */
+        .current-level-2d {
+            margin-top: 10px;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffcc00; /* Amarillo brillante */
+            text-shadow: 0 0 8px #ffcc00;
+        }
+
+        /* Estilos para contenedores de botones 2D */
+        .button-container-2d {
+            display: flex;
+            gap: 15px; /* Espacio entre botones */
+            margin-top: 20px;
+            flex-wrap: wrap; /* Permite que los botones se envuelvan en pantallas pequeñas */
+            justify-content: center;
+        }
+
+        /* Estilos para botones 2D */
+        .button-2d {
+            background-color: #8a2be2; /* Azul violeta */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .button-2d:hover {
+            background-color: #9932cc; /* Morado más oscuro */
+            transform: translateY(-2px);
+        }
+
+        .button-2d:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        /* --------------------------------------------------- */
+        /* Estilos para el Nivel 10 (3D) */
+        /* --------------------------------------------------- */
+        #gameContainer3D {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: none; /* Oculto por defecto */
+            background: #000;
+        }
+        #gameContainer3D canvas { /* El canvas de Three.js */
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1; /* Asegura que el canvas 3D esté en el fondo */
+        }
+        #winMessage3D {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 200;
+            background: rgba(0,0,0,0.9);
+            color: #00ff00;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 24px;
+            display: none;
+            box-shadow: 0 0 20px rgba(0,255,0,0.5);
+        }
+        #minimap3D {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 200px;
+            height: 200px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid #444;
+            border-radius: 10px;
+            z-index: 100;
+            padding: 10px;
+        }
+        #minimapCanvas3D {
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated;
+        }
+        #controls3D {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 15px;
+            border-radius: 10px;
+            z-index: 100;
+            font-size: 14px;
+        }
+        .control-item-3d {
+            margin: 5px 0;
+        }
+        .button-3d {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .button-3d:hover {
+            background: #555;
+        }
+        #compass3D {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 80px;
+            height: 80px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid #444;
+            border-radius: 50%;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        #compassArrow3D {
+            transition: transform 0.2s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>Laberinto Caleidoscópico</h1>
+
+    <!-- Contenedor para los niveles 2D (visible por defecto) -->
+    <div id="gameContainer2D" class="game-container-2d">
+        <div id="currentLevel2D" class="current-level-2d">Nivel: 1</div>
+        <canvas id="gameCanvas2D"></canvas>
+        <div id="gameMessage2D" class="game-message-2d"></div>
+        <div class="instructions-2d">
+            Usa las teclas de flecha (o W, A, S, D) para moverte.
+            Encuentra la salida (el cuadro verde).
+        </div>
+        <div class="button-container-2d">
+            <button id="prevLevelButton2D" class="button-2d">Nivel Anterior</button>
+            <button id="nextLevelButton2D" class="button-2d" style="display: none;">Siguiente Nivel</button>
+            <button id="forceNextLevelButton2D" class="button-2d">Saltar Nivel</button>
+        </div>
+    </div>
+
+    <!-- Contenedor para el Nivel 10 (3D) (oculto por defecto) -->
+    <div id="gameContainer3D">
+        <div id="compass3D">
+            <div id="compassArrow3D">↑</div>
+        </div>
+        <div id="minimap3D">
+            <canvas id="minimapCanvas3D"></canvas>
+        </div>
+        <div id="controls3D">
+            <div class="control-item-3d">↑↓ - Mover adelante/atrás</div>
+            <div class="control-item-3d">←→ - Girar izquierda/derecha</div>
+            <div class="control-item-3d">🟩 - Salida</div>
+            <div class="control-item-3d">🔵 - Visitado</div>
+        </div>
+        <div id="winMessage3D">
+            <h2>¡Felicidades!</h2>
+            <p>Has encontrado la salida</p>
+            <button class="button-3d" onclick="startGame3D()">Jugar de Nuevo</button>
+            <button class="button-3d" onclick="returnTo2DLevels()">Volver a 2D</button>
+        </div>
+    </div>
+
+    <!-- Importa Three.js para el nivel 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+        // --- Variables Globales y Configuración para el Juego 2D ---
+        const canvas2D = document.getElementById('gameCanvas2D');
+        const ctx2D = canvas2D.getContext('2d');
+        const gameMessage2D = document.getElementById('gameMessage2D');
+        const currentLevelDisplay2D = document.getElementById('currentLevel2D');
+        const nextLevelButton2D = document.getElementById('nextLevelButton2D');
+        const prevLevelButton2D = document.getElementById('prevLevelButton2D');
+        const forceNextLevelButton2D = document.getElementById('forceNextLevelButton2D');
+        const gameContainer2D = document.getElementById('gameContainer2D');
+
+        let maze2D = []; // Renombrado para evitar conflicto con maze3D
+        let player2D = { x: 0, y: 0 };
+        let exit2D = { x: 0, y: 0 };
+
+        let currentLevel = 1;
+        let hue = 0;
+        let animationFrameId2D;
+
+        let COLS_2D = 20;
+        let ROWS_2D = 20;
+        let TILE_SIZE_2D = 30;
+
+        const difficultyLevels = [
+            // Level 1 (Easy)
+            { cols: 15, rows: 15, tileSize: 40, hueSpeed: 0.5, shape: 'square', fogOfWar: false },
+            // Level 2 (Medium)
+            { cols: 20, rows: 20, tileSize: 30, hueSpeed: 1.0, shape: 'square', fogOfWar: false },
+            // Level 3 (Hard)
+            { cols: 25, rows: 25, tileSize: 25, hueSpeed: 1.5, shape: 'square', fogOfWar: false },
+            // Level 4 (Very Hard) - Smaller tiles, faster colors
+            { cols: 30, rows: 30, tileSize: 20, hueSpeed: 2.0, shape: 'square', fogOfWar: false },
+            // Level 5 (Circular) - Larger than L4
+            { cols: 35, rows: 35, tileSize: 18, hueSpeed: 2.0, shape: 'circle', fogOfWar: false },
+            // Level 6 (Triangle) - Larger than L5
+            { cols: 40, rows: 40, tileSize: 16, hueSpeed: 2.5, shape: 'triangle', fogOfWar: false },
+            // Level 7 (Hexagon) - Larger than L6
+            { cols: 45, rows: 45, tileSize: 14, hueSpeed: 3.0, shape: 'hexagon', fogOfWar: false },
+            // Level 8 (Fog of War) - Same as L7 but with limited visibility
+            { cols: 45, rows: 45, tileSize: 14, hueSpeed: 3.0, shape: 'hexagon', fogOfWar: true },
+            // Level 9 (Random Fog of War) - Random previous level config with fog of war
+            { cols: 0, rows: 0, tileSize: 0, hueSpeed: 0, shape: '', fogOfWar: true, isRandom: true }, // Placeholder, actual values picked randomly
+            // Level 10 (3D Maze) - Special level, handled by MazeGame3D
+            { is3D: true }
+        ];
+
+        // --- Utility Functions 2D ---
+        function getHSLColor(h, s, l) {
+            return `hsl(${h}, ${s}%, ${l}%)`;
+        }
+
+        function isPointInShape(px, py, shape, centerX, centerY, shapeParams) {
+            const { radius, size, hexRadius } = shapeParams;
+            if (shape === 'square') return true;
+            else if (shape === 'circle') {
+                const dist = Math.sqrt(Math.pow(px - centerX, 2) + Math.pow(py - centerY, 2));
+                return dist <= radius;
+            } else if (shape === 'triangle') {
+                const p1 = { x: centerX, y: centerY - size };
+                const p2 = { x: centerX + size * Math.sqrt(3) / 2, y: centerY + size / 2 };
+                const p3 = { x: centerX - size * Math.sqrt(3) / 2, y: centerY + size / 2 };
+                const sign = (p1x, p1y, p2x, p2y, p3x, p3y) => (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y);
+                const s1 = sign(px, py, p1.x, p1.y, p2.x, p2.y);
+                const s2 = sign(px, py, p2.x, p2.y, p3.x, p3.y);
+                const s3 = sign(px, py, p3.x, p3.y, p1.x, p1.y);
+                return (s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0);
+            } else if (shape === 'hexagon') {
+                const angle = Math.atan2(py - centerY, px - centerX);
+                const distance = Math.sqrt(Math.pow(px - centerX, 2) + Math.pow(py - centerY, 2));
+                const segmentAngle = Math.PI / 3;
+                let normalizedAngle = angle % (2 * Math.PI);
+                if (normalizedAngle < 0) normalizedAngle += (2 * Math.PI);
+                const segmentIndex = Math.floor(normalizedAngle / segmentAngle);
+                const angleInSegment = normalizedAngle - (segmentIndex * segmentAngle);
+                const r = hexRadius;
+                const apothem = r * Math.cos(Math.PI / 6);
+                const maxDistAtAngle = apothem / Math.cos(angleInSegment - Math.PI / 6);
+                return distance <= maxDistAtAngle;
+            }
+            return true;
+        }
+
+        function isPathReachable(startX, startY, targetX, targetY, currentMaze) {
+            if (startX < 0 || startX >= COLS_2D || startY < 0 || startY >= ROWS_2D || currentMaze[startY][startX] === 1) return false;
+            if (targetX < 0 || targetX >= COLS_2D || targetY < 0 || targetY >= ROWS_2D || currentMaze[targetY][targetX] === 1) return false;
+
+            const queue = [{ x: startX, y: startY }];
+            const visited = new Set();
+            visited.add(`${startX},${startY}`);
+            const directions = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }];
+
+            while (queue.length > 0) {
+                const { x, y } = queue.shift();
+                if (x === targetX && y === targetY) return true;
+
+                for (const dir of directions) {
+                    const nx = x + dir.dx;
+                    const ny = y + dir.dy;
+                    if (nx >= 0 && nx < COLS_2D && ny >= 0 && ny < ROWS_2D && currentMaze[ny][nx] !== 1 && !visited.has(`${nx},${ny}`)) {
+                        visited.add(`${nx},${ny}`);
+                        queue.push({ x: nx, y: ny });
+                    }
+                }
+            }
+            return false;
+        }
+
+        function generateMaze2D() {
+            maze2D = Array(ROWS_2D).fill(0).map(() => Array(COLS_2D).fill(1));
+            const stack = [];
+            let startX = 0; let startY = 0;
+            maze2D[startY][startX] = 0;
+            stack.push({ x: startX, y: startY });
+            const directions = [{ dx: 0, dy: -2 }, { dx: 0, dy: 2 }, { dx: -2, dy: 0 }, { dx: 2, dy: 0 }];
+
+            while (stack.length > 0) {
+                const current = stack[stack.length - 1];
+                const neighbors = [];
+                for (const dir of directions) {
+                    const nx = current.x + dir.dx;
+                    const ny = current.y + dir.dy;
+                    if (nx >= 0 && nx < COLS_2D && ny >= 0 && ny < ROWS_2D && maze2D[ny][nx] === 1) {
+                        neighbors.push({ x: nx, y: ny, wallX: current.x + dir.dx / 2, wallY: current.y + dir.dy / 2 });
+                    }
+                }
+                if (neighbors.length > 0) {
+                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    maze2D[next.y][next.x] = 0;
+                    maze2D[next.wallY][next.wallX] = 0;
+                    stack.push({ x: next.x, y: next.y });
+                } else {
+                    stack.pop();
+                }
+            }
+        }
+
+        function applyShapeToMaze2D(currentMaze, shape) {
+            const centerX = canvas2D.width / 2;
+            const centerY = canvas2D.height / 2;
+            const radius = Math.min(canvas2D.width, canvas2D.height) / 2 * 0.995;
+            const size = Math.min(canvas2D.width, canvas2D.height) * 0.495;
+            const hexRadius = Math.min(canvas2D.width, canvas2D.height) / 2 * 0.99;
+            const shapeParams = { radius, size, hexRadius };
+
+            for (let y = 0; y < ROWS_2D; y++) {
+                for (let x = 0; x < COLS_2D; x++) {
+                    const cellCenterX = x * TILE_SIZE_2D + TILE_SIZE_2D / 2;
+                    const cellCenterY = y * TILE_SIZE_2D + TILE_SIZE_2D / 2;
+                    if (!isPointInShape(cellCenterX, cellCenterY, shape, centerX, centerY, shapeParams)) {
+                        currentMaze[y][x] = 1;
+                    }
+                }
+            }
+        }
+
+        function findAndGuaranteeStartExitPoints2D(mazeToModify, shape) {
+            const centerX = canvas2D.width / 2;
+            const centerY = canvas2D.height / 2;
+            const radius = Math.min(canvas2D.width, canvas2D.height) / 2 * 0.995;
+            const size = Math.min(canvas2D.width, canvas2D.height) * 0.495;
+            const hexRadius = Math.min(canvas2D.width, canvas2D.height) / 2 * 0.99;
+            const shapeParams = { radius, size, hexRadius };
+
+            function findFirstValidPathCellInArea(startRow, startCol, rowIncrement, colIncrement) {
+                for (let y = startRow; (rowIncrement > 0 ? y < ROWS_2D : y >= 0); y += rowIncrement) {
+                    for (let x = startCol; (colIncrement > 0 ? x < COLS_2D : x >= 0); x += colIncrement) {
+                        const cellCenterX = x * TILE_SIZE_2D + TILE_SIZE_2D / 2;
+                        const cellCenterY = y * TILE_SIZE_2D + TILE_SIZE_2D / 2;
+                        if (mazeToModify[y][x] === 0 && isPointInShape(cellCenterX, cellCenterY, shape, centerX, centerY, shapeParams)) {
+                            return { x, y };
+                        }
+                    }
+                }
+                return null;
+            }
+
+            let tempPlayerPos = { x: 0, y: 0 };
+            let tempExitPos = { x: COLS_2D - 1, y: ROWS_2D - 1 };
+
+            let foundPlayerPos = findFirstValidPathCellInArea(0, 0, 1, 1);
+            if (foundPlayerPos) {
+                tempPlayerPos = foundPlayerPos;
+            } else {
+                console.error("No valid starting path found within the shape! Defaulting to (0,0).");
+                if (0 < ROWS_2D && 0 < COLS_2D) mazeToModify[0][0] = 0;
+            }
+            if (tempPlayerPos.y < ROWS_2D && tempPlayerPos.x < COLS_2D) mazeToModify[tempPlayerPos.y][tempPlayerPos.x] = 0;
+
+            const neighbors = [{dx: 1, dy: 0}, {dx: 0, dy: 1}, {dx: -1, dy: 0}, {dx: 0, dy: -1}];
+            for (const dir of neighbors) {
+                const nx = tempPlayerPos.x + dir.dx;
+                const ny = tempPlayerPos.y + dir.dy;
+                if (nx >= 0 && nx < COLS_2D && ny >= 0 && ny < ROWS_2D) {
+                    const cellCenterX = nx * TILE_SIZE_2D + TILE_SIZE_2D / 2;
+                    const cellCenterY = ny * TILE_SIZE_2D + TILE_SIZE_2D / 2;
+                    if (isPointInShape(cellCenterX, cellCenterY, shape, centerX, centerY, shapeParams)) {
+                        mazeToModify[ny][nx] = 0;
+                    }
+                }
+            }
+            
+            let foundExitPos = findFirstValidPathCellInArea(ROWS_2D - 1, COLS_2D - 1, -1, -1);
+            if (foundExitPos) {
+                tempExitPos = foundExitPos;
+            } else {
+                console.error("No valid exit path found within the shape! Defaulting to (COLS-1,ROWS-1).");
+                if (COLS_2D - 1 < COLS_2D && ROWS_2D - 1 < ROWS_2D) mazeToModify[ROWS_2D - 1][COLS_2D - 1] = 0;
+            }
+            if (tempExitPos.y < ROWS_2D && tempExitPos.x < COLS_2D) mazeToModify[tempExitPos.y][tempExitPos.x] = 0;
+
+            for (const dir of neighbors) {
+                const nx = tempExitPos.x + dir.dx;
+                const ny = tempExitPos.y + dir.dy;
+                if (nx >= 0 && nx < COLS_2D && ny >= 0 && ny < ROWS_2D) {
+                    const cellCenterX = nx * TILE_SIZE_2D + TILE_SIZE_2D / 2;
+                    const cellCenterY = ny * TILE_SIZE_2D + TILE_SIZE_2D / 2;
+                    if (isPointInShape(cellCenterX, cellCenterY, shape, centerX, centerY, shapeParams)) {
+                        mazeToModify[ny][nx] = 0;
+                    }
+                }
+            }
+            return { playerPos: tempPlayerPos, exitPos: tempExitPos };
+        }
+
+        function draw2D() {
+            ctx2D.clearRect(0, 0, canvas2D.width, canvas2D.height);
+            const levelSettings = difficultyLevels[currentLevel - 1];
+            const hueSpeed = levelSettings.hueSpeed;
+            const fogOfWar = levelSettings.fogOfWar;
+            const visibilityRadius = 3;
+
+            hue = (hue + hueSpeed) % 360;
+
+            for (let y = 0; y < ROWS_2D; y++) {
+                for (let x = 0; x < COLS_2D; x++) {
+                    const cellX = x * TILE_SIZE_2D;
+                    const cellY = y * TILE_SIZE_2D;
+                    const cellType = maze2D[y][x];
+
+                    let isVisible = true;
+                    if (fogOfWar) {
+                        const dist = Math.sqrt(Math.pow(x - player2D.x, 2) + Math.pow(y - player2D.y, 2));
+                        if (dist > visibilityRadius) {
+                            isVisible = false;
+                        }
+                    }
+
+                    if (isVisible) {
+                        if (cellType === 1) {
+                            ctx2D.fillStyle = '#4a0080';
+                            ctx2D.fillRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D);
+                            ctx2D.strokeStyle = '#6a00b0';
+                            ctx2D.lineWidth = 1;
+                            ctx2D.strokeRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D);
+                        } else {
+                            const dynamicHue = (hue + (x * 5) + (y * 5)) % 360;
+                            ctx2D.fillStyle = getHSLColor(dynamicHue, 80, 40);
+                            ctx2D.fillRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D);
+                            ctx2D.strokeStyle = getHSLColor(dynamicHue, 90, 60);
+                            ctx2D.lineWidth = 1;
+                            ctx2D.strokeRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D);
+
+                            if (x === exit2D.x && y === exit2D.y) {
+                                ctx2D.fillStyle = 'rgba(0, 255, 0, 0.7)';
+                                ctx2D.fillRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D);
+                                ctx2D.strokeStyle = '#00ff00';
+                                ctx2D.lineWidth = 2;
+                                ctx2D.strokeRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D);
+                            }
+                        }
+                    } else {
+                        ctx2D.fillStyle = '#100020';
+                        ctx2D.fillRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D);
+                    }
+                }
+            }
+
+            ctx2D.fillStyle = '#ffcc00';
+            ctx2D.beginPath();
+            ctx2D.arc(player2D.x * TILE_SIZE_2D + TILE_SIZE_2D / 2, player2D.y * TILE_SIZE_2D + TILE_SIZE_2D / 2, TILE_SIZE_2D / 3, 0, Math.PI * 2);
+            ctx2D.fill();
+            ctx2D.strokeStyle = '#fff';
+            ctx2D.lineWidth = 2;
+            ctx2D.stroke();
+
+            animationFrameId2D = requestAnimationFrame(draw2D);
+        }
+
+        function movePlayer2D(dx, dy) {
+            const newX = player2D.x + dx;
+            const newY = player2D.y + dy;
+
+            if (newX >= 0 && newX < COLS_2D && newY >= 0 && newY < ROWS_2D && maze2D[newY][newX] !== 1) {
+                player2D.x = newX;
+                player2D.y = newY;
+                
+                if (player2D.x === exit2D.x && player2D.y === exit2D.y) {
+                    gameMessage2D.style.color = 'lime';
+                    gameMessage2D.textContent = `¡Felicidades! Nivel ${currentLevel} completado.`;
+                    cancelAnimationFrame(animationFrameId2D);
+                    nextLevelButton2D.style.display = 'block';
+                } else {
+                    gameMessage2D.textContent = "";
+                }
+            } else {
+                gameMessage2D.style.color = '#ff6666';
+                gameMessage2D.textContent = "¡Movimiento bloqueado por una pared!";
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            e.preventDefault();
+            gameMessage2D.textContent = "";
+
+            if (nextLevelButton2D.style.display === 'none' && gameContainer2D.style.display !== 'none') { // Only for 2D game
+                switch(e.key) {
+                    case 'ArrowUp': case 'w': case 'W': movePlayer2D(0, -1); break;
+                    case 'ArrowDown': case 's': case 'S': movePlayer2D(0, 1); break;
+                    case 'ArrowLeft': case 'a': case 'A': movePlayer2D(-1, 0); break;
+                    case 'ArrowRight': case 'd': case 'D': movePlayer2D(1, 0); break;
+                }
+            }
+        });
+
+        function changeLevel(direction) {
+            let newLevel = currentLevel + direction;
+            if (newLevel < 1) newLevel = 1;
+            if (newLevel > difficultyLevels.length) newLevel = difficultyLevels.length;
+
+            // Handle transition to/from 3D level
+            if (difficultyLevels[newLevel - 1].is3D) {
+                currentLevel = newLevel; // Update level before starting 3D
+                window.startGame3D(); // Call the global function for 3D game
+                return;
+            } else if (currentLevel === 10 && !difficultyLevels[newLevel - 1].is3D) {
+                // If coming from 3D level back to 2D
+                currentLevel = newLevel;
+                startGame2D();
+                return;
+            }
+            
+            currentLevel = newLevel;
+            nextLevelButton2D.style.display = 'none';
+            currentLevelDisplay2D.textContent = `Nivel: ${currentLevel}`;
+            startGame2D();
+        }
+
+        nextLevelButton2D.addEventListener('click', () => { changeLevel(1); });
+        prevLevelButton2D.addEventListener('click', () => { changeLevel(-1); });
+        forceNextLevelButton2D.addEventListener('click', () => { changeLevel(1); });
+
+        function startGame2D() {
+            gameContainer3D.style.display = 'none'; // Hide 3D container
+            gameContainer2D.style.display = 'flex'; // Show 2D container
+
+            let solvable = false;
+            let attempts = 0;
+            const maxAttempts = 2000;
+
+            let currentLevelSettings = difficultyLevels[currentLevel - 1];
+            if (currentLevelSettings.isRandom) {
+                const randomIndex = Math.floor(Math.random() * 7);
+                const baseLevelSettings = difficultyLevels[randomIndex];
+                currentLevelSettings = { ...baseLevelSettings, fogOfWar: true };
+            }
+
+            COLS_2D = currentLevelSettings.cols;
+            ROWS_2D = currentLevelSettings.rows;
+            TILE_SIZE_2D = currentLevelSettings.tileSize;
+            canvas2D.width = COLS_2D * TILE_SIZE_2D;
+            canvas2D.height = ROWS_2D * TILE_SIZE_2D;
+
+            do {
+                generateMaze2D();
+                let tempMaze = JSON.parse(JSON.stringify(maze2D));
+
+                if (currentLevelSettings.shape && currentLevelSettings.shape !== 'square') {
+                    applyShapeToMaze2D(tempMaze, currentLevelSettings.shape);
+                }
+
+                const { playerPos, exitPos } = findAndGuaranteeStartExitPoints2D(tempMaze, currentLevelSettings.shape);
+                player2D.x = playerPos.x; player2D.y = playerPos.y;
+                exit2D.x = exitPos.x; exit2D.y = exitPos.y;
+
+                solvable = isPathReachable(player2D.x, player2D.y, exit2D.x, exit2D.y, tempMaze);
+                attempts++;
+                if (!solvable) {
+                    console.warn(`2D Maze Level ${currentLevel} not solvable, regenerating. Attempt ${attempts}`);
+                    if (attempts >= maxAttempts) {
+                        console.error(`Max attempts for 2D Maze Level ${currentLevel} reached. Maze might be unsolvable.`);
+                        break;
+                    }
+                } else {
+                    maze2D = tempMaze;
+                }
+            } while (!solvable && attempts < maxAttempts);
+
+            if (solvable) {
+                console.log(`2D Maze Level ${currentLevel} solvable found in ${attempts} attempts.`);
+            }
+
+            if (animationFrameId2D) {
+                cancelAnimationFrame(animationFrameId2D);
+            }
+            draw2D();
+        }
+
+        // --- Variables Globales y Configuración para el Juego 3D ---
+        let game3D; // Instancia de la clase MazeGame para el nivel 3D
+        let animationFrameId3D; // ID para el bucle de animación 3D
+        const gameContainer3D = document.getElementById('gameContainer3D');
+
+        // Clase MazeGame (para el nivel 3D) - Definida una vez
+        class MazeGame {
+            constructor() {
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                
+                this.renderer = new THREE.WebGLRenderer({ antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setClearColor(0x1a1a2e);
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                
+                this.camera.fov = 75;
+                this.camera.updateProjectionMatrix();
+                
+                // Asegurarse de que el canvas 3D se añade al contenedor 3D
+                gameContainer3D.appendChild(this.renderer.domElement);
+                this.renderer.domElement.style.position = 'absolute';
+                this.renderer.domElement.style.top = '0';
+                this.renderer.domElement.style.left = '0';
+                this.renderer.domElement.style.zIndex = '1';
+                
+                this.mazeSize = 15; // Tamaño del laberinto 3D
+                this.cellSize = 4;
+                this.wallHeight = 3.5;
+                this.playerHeight = 1.7;
+                this.playerGridX = 1;
+                this.playerGridZ = 1;
+                this.playerRotation = 0;
+                this.exitPosition = { x: this.mazeSize - 2, z: this.mazeSize - 2 };
+                
+                this.canMove = true;
+                this.canRotate = true;
+                this.moveDelay = 200;
+                this.rotateDelay = 150;
+                
+                this.visitedCells = new Set();
+                this.visitedCells.add(`${this.playerGridX},${this.playerGridZ}`);
+                this.floorMeshes = {};
+                
+                this.keys = {};
+                
+                this.minimapCanvas = document.getElementById('minimapCanvas3D');
+                this.minimapCtx = this.minimapCanvas.getContext('2d');
+                this.minimapCanvas.width = 180;
+                this.minimapCanvas.height = 180;
+
+                this.winMessageElement = document.getElementById('winMessage3D');
+                
+                this.initControls();
+                this.newGame(); // Llama a newGame() directamente en el constructor
+                this.animate3D(); // Iniciar el bucle de animación
+                
+                window.addEventListener('resize', () => this.onWindowResize());
+            }
+            
+            generateMaze3D() {
+                this.maze = [];
+                for (let i = 0; i < this.mazeSize; i++) {
+                    this.maze[i] = [];
+                    for (let j = 0; j < this.mazeSize; j++) {
+                        this.maze[i][j] = 1;
+                    }
+                }
+                this.carvePath3D(1, 1);
+                this.maze[this.exitPosition.x][this.exitPosition.z] = 0;
+                this.maze[this.exitPosition.x - 1][this.exitPosition.z] = 0;
+                this.maze[this.exitPosition.x][this.exitPosition.z - 1] = 0;
+            }
+            
+            carvePath3D(x, z) {
+                this.maze[x][z] = 0;
+                const directions = [
+                    { dx: 0, dz: -2 }, { dx: 2, dz: 0 }, { dx: 0, dz: 2 }, { dx: -2, dz: 0 }
+                ];
+                for (let i = directions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [directions[i], directions[j]] = [directions[j], directions[i]];
+                }
+                for (const dir of directions) {
+                    const newX = x + dir.dx;
+                    const newZ = z + dir.dz;
+                    if (newX > 0 && newX < this.mazeSize - 1 && newZ > 0 && newZ < this.mazeSize - 1 && this.maze[newX][newZ] === 1) {
+                        this.maze[x + dir.dx / 2][z + dir.dz / 2] = 0;
+                        this.carvePath3D(newX, newZ);
+                    }
+                }
+            }
+            
+            createScene3D() {
+                // Eliminar solo los objetos del laberinto, no las luces globales
+                const objectsToRemove = [];
+                this.scene.children.forEach(child => {
+                    if (child.userData.isMazeElement) { // Marcar elementos del laberinto
+                        objectsToRemove.push(child);
+                    }
+                });
+                objectsToRemove.forEach(child => {
+                    this.scene.remove(child);
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) child.material.dispose();
+                });
+
+                // Inicializar luces si no existen o reconfigurarlas
+                if (!this.ambientLight) {
+                    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+                    this.scene.add(this.ambientLight);
+                }
+                if (!this.directionalLight) {
+                    this.directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                    this.directionalLight.position.set(10, 20, 10);
+                    this.directionalLight.castShadow = true;
+                    this.directionalLight.shadow.mapSize.width = 2048;
+                    this.directionalLight.shadow.mapSize.height = 2048;
+                    this.scene.add(this.directionalLight);
+                }
+                if (!this.playerLight) {
+                    this.playerLight = new THREE.PointLight(0xffffaa, 1.2, 20);
+                    this.scene.add(this.playerLight);
+                }
+                if (!this.playerSpotLight) {
+                    this.playerSpotLight = new THREE.SpotLight(0xffffff, 0.8);
+                    this.playerSpotLight.angle = Math.PI / 6;
+                    this.playerSpotLight.penumbra = 0.3;
+                    this.playerSpotLight.decay = 2;
+                    this.playerSpotLight.distance = 30;
+                    this.playerSpotLight.target = new THREE.Object3D(); // Crear target una vez
+                    this.scene.add(this.playerSpotLight.target);
+                    this.scene.add(this.playerSpotLight);
+                }
+                
+                this.floorMeshes = {};
+                this.scene.fog = new THREE.Fog(0x1a1a2e, 15, 50);
+                
+                const wallMaterial = new THREE.MeshPhongMaterial({ color: 0xc4c4c4, specular: 0x222222, shininess: 10 });
+                const floorMaterial = new THREE.MeshPhongMaterial({ color: 0x2a2a2a, specular: 0x111111, shininess: 5 });
+                const visitedFloorMaterial = new THREE.MeshPhongMaterial({ color: 0x3366aa, specular: 0x111133, shininess: 20 });
+                const ceilingMaterial = new THREE.MeshPhongMaterial({ color: 0x1a1a1a, specular: 0x000000 });
+                const exitMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, emissive: 0x00aa00, emissiveIntensity: 0.5 });
+                
+                const wallGeometry = new THREE.BoxGeometry(this.cellSize, this.wallHeight, this.cellSize);
+                const floorGeometry = new THREE.BoxGeometry(this.cellSize, 0.1, this.cellSize);
+                const ceilingGeometry = new THREE.BoxGeometry(this.cellSize, 0.1, this.cellSize);
+                
+                for (let x = 0; x < this.mazeSize; x++) {
+                    for (let z = 0; z < this.mazeSize; z++) {
+                        const posX = (x - this.mazeSize / 2) * this.cellSize;
+                        const posZ = (z - this.mazeSize / 2) * this.cellSize;
+                        
+                        if (this.maze[x][z] === 0) {
+                            const cellKey = `${x},${z}`;
+                            const isVisited = this.visitedCells.has(cellKey);
+                            const floor = new THREE.Mesh(floorGeometry, isVisited ? visitedFloorMaterial : floorMaterial);
+                            floor.position.set(posX, -0.05, posZ);
+                            floor.receiveShadow = true;
+                            floor.userData.isMazeElement = true; // Marcar para eliminación
+                            this.scene.add(floor);
+                            this.floorMeshes[cellKey] = { mesh: floor, visitedMaterial: visitedFloorMaterial };
+                        }
+                        
+                        if (this.maze[x][z] === 0 && Math.random() > 0.3) {
+                            const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+                            ceiling.position.set(posX, this.wallHeight + 0.5, posZ);
+                            ceiling.userData.isMazeElement = true;
+                            this.scene.add(ceiling);
+                        }
+                        
+                        if (this.maze[x][z] === 1) {
+                            const heightVariation = 0.95 + Math.random() * 0.1;
+                            const wallHeight = this.wallHeight * heightVariation;
+                            const wallGeo = new THREE.BoxGeometry(this.cellSize, wallHeight, this.cellSize);
+                            const wall = new THREE.Mesh(wallGeo, wallMaterial);
+                            wall.position.set(posX, wallHeight / 2, posZ);
+                            wall.castShadow = true;
+                            wall.receiveShadow = true;
+                            wall.userData.isMazeElement = true;
+                            this.scene.add(wall);
+                        }
+                        
+                        if (x === this.exitPosition.x && z === this.exitPosition.z) {
+                            const exitMesh = new THREE.Mesh(floorGeometry, exitMaterial);
+                            exitMesh.position.set(posX, 0.2, posZ);
+                            exitMesh.userData.isMazeElement = true;
+                            this.scene.add(exitMesh);
+                            
+                            const exitMarkerGeometry = new THREE.CylinderGeometry(0.8, 0.8, 3, 8);
+                            const exitMarkerMaterial = new THREE.MeshPhongMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 0.8 });
+                            const exitMarker = new THREE.Mesh(exitMarkerGeometry, exitMarkerMaterial);
+                            exitMarker.position.set(posX, 1.5, posZ);
+                            exitMarker.userData.isMazeElement = true;
+                            this.scene.add(exitMarker);
+                            
+                            const exitLight = new THREE.PointLight(0x00ff00, 2, 15);
+                            exitLight.position.set(posX, 2, posZ);
+                            exitLight.userData.isMazeElement = true;
+                            this.scene.add(exitLight);
+                        }
+                    }
+                }
+                this.updateCameraPosition3D();
+            }
+            
+            updateCameraPosition3D() {
+                const worldX = (this.playerGridX - this.mazeSize / 2) * this.cellSize;
+                const worldZ = (this.playerGridZ - this.mazeSize / 2) * this.cellSize;
+                
+                this.camera.position.x = worldX;
+                this.camera.position.y = this.playerHeight;
+                this.camera.position.z = worldZ;
+                
+                if (this.playerLight) {
+                    this.playerLight.position.x = worldX;
+                    this.playerLight.position.z = worldZ;
+                }
+                
+                if (this.playerSpotLight) {
+                    this.playerSpotLight.position.x = worldX;
+                    this.playerSpotLight.position.y = this.playerHeight;
+                    this.playerSpotLight.position.z = worldZ;
+                }
+            }
+            
+            updateFloorColor3D(x, z) {
+                const cellKey = `${x},${z}`;
+                const floorData = this.floorMeshes[cellKey];
+                if (floorData) {
+                    floorData.mesh.material = floorData.visitedMaterial;
+                }
+            }
+            
+            updateMinimap3D() {
+                const ctx = this.minimapCtx;
+                const cellSize = this.minimapCanvas.width / this.mazeSize;
+                
+                ctx.fillStyle = '#111';
+                ctx.fillRect(0, 0, this.minimapCanvas.width, this.minimapCanvas.height);
+                
+                for (let x = 0; x < this.mazeSize; x++) {
+                    for (let z = 0; z < this.mazeSize; z++) {
+                        const cellKey = `${x},${z}`;
+                        
+                        if (this.maze[x][z] === 1) {
+                            ctx.fillStyle = '#666';
+                        } else if (x === this.exitPosition.x && z === this.exitPosition.z) {
+                            ctx.fillStyle = '#0f0';
+                        } else if (this.visitedCells.has(cellKey)) {
+                            ctx.fillStyle = '#36a';
+                        } else {
+                            ctx.fillStyle = '#222';
+                        }
+                        ctx.fillRect(x * cellSize, z * cellSize, cellSize - 1, cellSize - 1);
+                    }
+                }
+                
+                ctx.fillStyle = '#ff0';
+                ctx.beginPath();
+                ctx.arc(
+                    this.playerGridX * cellSize + cellSize / 2,
+                    this.playerGridZ * cellSize + cellSize / 2,
+                    cellSize / 3,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+                
+                ctx.strokeStyle = '#ff0';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(
+                    this.playerGridX * cellSize + cellSize / 2,
+                    this.playerGridZ * cellSize + cellSize / 2
+                );
+                
+                const dirX = Math.sin(this.playerRotation) * cellSize / 2;
+                const dirZ = -Math.cos(this.playerRotation) * cellSize / 2;
+                
+                ctx.lineTo(
+                    this.playerGridX * cellSize + cellSize / 2 + dirX,
+                    this.playerGridZ * cellSize + cellSize / 2 + dirZ
+                );
+                ctx.stroke();
+            }
+            
+            updateCompass3D() {
+                const compassArrow = document.getElementById('compassArrow3D');
+                const rotation = -this.playerRotation * (180 / Math.PI);
+                compassArrow.style.transform = `rotate(${rotation}deg)`;
+            }
+            
+            initControls() {
+                // Asegurarse de que los listeners se añaden solo una vez
+                if (!this.controlsInitialized) {
+                    document.addEventListener('keydown', (e) => {
+                        this.keys[e.code] = true;
+                    });
+                    
+                    document.addEventListener('keyup', (e) => {
+                        this.keys[e.code] = false;
+                    });
+                    this.controlsInitialized = true;
+                }
+            }
+            
+            handleMovement3D() {
+                if (this.winMessageElement.style.display === 'block') return; // No mover si ya ganó
+
+                // Rotación con flechas izquierda/derecha
+                if (this.keys['ArrowLeft'] && this.canRotate) {
+                    this.playerRotation -= Math.PI / 2;
+                    this.canRotate = false;
+                    this.updateCompass3D();
+                    setTimeout(() => { this.canRotate = true; }, this.rotateDelay);
+                }
+                
+                if (this.keys['ArrowRight'] && this.canRotate) {
+                    this.playerRotation += Math.PI / 2;
+                    this.canRotate = false;
+                    this.updateCompass3D();
+                    setTimeout(() => { this.canRotate = true; }, this.rotateDelay);
+                }
+                
+                // Movimiento basado en la rotación actual
+                if (this.keys['ArrowUp'] && this.canMove) {
+                    let newX = this.playerGridX;
+                    let newZ = this.playerGridZ;
+                    
+                    let normalizedRotation = ((this.playerRotation % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
+                    let direction = Math.round(normalizedRotation / (Math.PI / 2)) % 4;
+                    
+                    switch (direction) {
+                        case 0: newZ = this.playerGridZ - 1; break; // North
+                        case 1: newX = this.playerGridX + 1; break; // East
+                        case 2: newZ = this.playerGridZ + 1; break; // South
+                        case 3: newX = this.playerGridX - 1; break; // West
+                    }
+                    
+                    if (newX >= 0 && newX < this.mazeSize && newZ >= 0 && newZ < this.mazeSize && this.maze[newX][newZ] === 0) {
+                        this.playerGridX = newX;
+                        this.playerGridZ = newZ;
+                        
+                        this.visitedCells.add(`${newX},${newZ}`);
+                        
+                        this.updateCameraPosition3D();
+                        this.updateFloorColor3D(newX, newZ);
+                        this.updateMinimap3D();
+                        this.canMove = false;
+                        setTimeout(() => { this.canMove = true; }, this.moveDelay);
+                        
+                        if (this.playerGridX === this.exitPosition.x && this.playerGridZ === this.exitPosition.z) {
+                            this.showWinMessage3D();
+                        }
+                    }
+                }
+                
+                if (this.keys['ArrowDown'] && this.canMove) {
+                    let newX = this.playerGridX;
+                    let newZ = this.playerGridZ;
+                    
+                    let normalizedRotation = ((this.playerRotation % (2 * Math.PI)) + (2 * Math.PI)) % (2 * Math.PI);
+                    let direction = Math.round(normalizedRotation / (Math.PI / 2)) % 4;
+                    
+                    switch (direction) {
+                        case 0: newZ = this.playerGridZ + 1; break; // North -> South
+                        case 1: newX = this.playerGridX - 1; break; // East -> West
+                        case 2: newZ = this.playerGridZ - 1; break; // South -> North
+                        case 3: newX = this.playerGridX + 1; break; // West -> East
+                    }
+                    
+                    if (newX >= 0 && newX < this.mazeSize && newZ >= 0 && newZ < this.mazeSize && this.maze[newX][newZ] === 0) {
+                        this.playerGridX = newX;
+                        this.playerGridZ = newZ;
+                        
+                        this.visitedCells.add(`${newX},${newZ}`);
+                        
+                        this.updateCameraPosition3D();
+                        this.updateFloorColor3D(newX, newZ);
+                        this.updateMinimap3D();
+                        this.canMove = false;
+                        setTimeout(() => { this.canMove = true; }, this.moveDelay);
+                        
+                        if (this.playerGridX === this.exitPosition.x && this.playerGridZ === this.exitPosition.z) {
+                            this.showWinMessage3D();
+                        }
+                    }
+                }
+            }
+            
+            showWinMessage3D() {
+                this.winMessageElement.style.display = 'block';
+            }
+            
+            animate3D() {
+                animationFrameId3D = requestAnimationFrame(() => this.animate3D()); // Usar ID global
+                
+                this.handleMovement3D();
+                
+                this.camera.rotation.order = 'YXZ';
+                this.camera.rotation.y = -this.playerRotation;
+                this.camera.rotation.x = 0;
+                
+                if (this.playerSpotLight && this.playerSpotLight.target) {
+                    const dirX = Math.sin(this.playerRotation);
+                    const dirZ = -Math.cos(this.playerRotation);
+                    this.playerSpotLight.target.position.set(
+                        this.camera.position.x + dirX * 10,
+                        this.playerHeight - 1,
+                        this.camera.position.z + dirZ * 10
+                    );
+                    this.playerSpotLight.target.updateMatrixWorld();
+                } else if (this.playerSpotLight) {
+                    this.playerSpotLight.target = new THREE.Object3D();
+                    this.scene.add(this.playerSpotLight.target);
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+            
+            onWindowResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            newGame() {
+                this.playerGridX = 1;
+                this.playerGridZ = 1;
+                this.playerRotation = 0;
+                this.canMove = true;
+                this.canRotate = true;
+                this.visitedCells = new Set();
+                this.visitedCells.add(`${this.playerGridX},${this.playerGridZ}`);
+                this.floorMeshes = {};
+                this.winMessageElement.style.display = 'none';
+                this.generateMaze3D();
+                this.createScene3D();
+                this.updateMinimap3D();
+                this.updateCompass3D();
+            }
+        }
+        
+        // --- Lógica de Inicio del Juego Principal (Alterna 2D/3D) ---
+        // Asegurarse de que game3D sea global y accesible
+        window.game3D = null; // Inicializar como null globalmente
+        window.animationFrameId3D = null; // ID global para el bucle 3D
+
+        // Función global para iniciar/reiniciar el juego 3D
+        window.startGame3D = function() {
+            // Detener animación 2D si está activa
+            if (animationFrameId2D) {
+                cancelAnimationFrame(animationFrameId2D);
+            }
+            gameContainer2D.style.display = 'none'; // Ocultar 2D
+            gameContainer3D.style.display = 'block'; // Mostrar 3D
+
+            if (!window.game3D) {
+                window.game3D = new MazeGame();
+            } else {
+                window.game3D.newGame();
+            }
+        };
+
+        // Función global para volver de 3D a 2D
+        window.returnTo2DLevels = function() {
+            if (window.animationFrameId3D) {
+                cancelAnimationFrame(window.animationFrameId3D); // Detener animación 3D
+            }
+            currentLevel = 1; // Volver al primer nivel 2D
+            if (window.game3D && window.game3D.winMessageElement) {
+                window.game3D.winMessageElement.style.display = 'none'; // Ocultar mensaje de victoria 3D
+            }
+            startGame2D(); // Iniciar el juego 2D
+        };
+
+
+        // Iniciar el juego cuando la página esté completamente cargada
+        // Definir startGame directamente en el ámbito global
+        function startGame() {
+            // Ocultar ambos contenedores al inicio
+            gameContainer2D.style.display = 'none';
+            gameContainer3D.style.display = 'none';
+
+            // Determinar la configuración del nivel actual
+            let currentLevelSettings = difficultyLevels[currentLevel - 1];
+
+            if (currentLevelSettings.is3D) {
+                // Si es el Nivel 10 (3D)
+                gameContainer3D.style.display = 'block'; // Mostrar contenedor 3D
+                if (!window.game3D) { // Inicializar MazeGame solo una vez
+                    window.game3D = new MazeGame();
+                } else {
+                    window.game3D.newGame(); // Reiniciar el juego 3D si ya existe
+                }
+                // Detener cualquier animación 2D si estaba activa
+                if (animationFrameId2D) {
+                    cancelAnimationFrame(animationFrameId2D);
+                }
+            } else {
+                // Si es un nivel 2D
+                gameContainer2D.style.display = 'flex'; // Mostrar contenedor 2D
+
+                let solvable = false;
+                let attempts = 0;
+                const maxAttempts = 2000;
+
+                if (currentLevelSettings.isRandom) {
+                    const randomIndex = Math.floor(Math.random() * 7);
+                    const baseLevelSettings = difficultyLevels[randomIndex];
+                    currentLevelSettings = { ...baseLevelSettings, fogOfWar: true };
+                }
+
+                COLS_2D = currentLevelSettings.cols;
+                ROWS_2D = currentLevelSettings.rows;
+                TILE_SIZE_2D = currentLevelSettings.tileSize;
+                canvas2D.width = COLS_2D * TILE_SIZE_2D;
+                canvas2D.height = ROWS_2D * TILE_SIZE_2D;
+
+                do {
+                    generateMaze2D();
+                    let tempMaze = JSON.parse(JSON.stringify(maze2D));
+
+                    if (currentLevelSettings.shape && currentLevelSettings.shape !== 'square') {
+                        applyShapeToMaze2D(tempMaze, currentLevelSettings.shape);
+                    }
+
+                    const { playerPos, exitPos } = findAndGuaranteeStartExitPoints2D(tempMaze, currentLevelSettings.shape);
+                    player2D.x = playerPos.x; player2D.y = playerPos.y;
+                    exit2D.x = exitPos.x; exit2D.y = exitPos.y;
+
+                    solvable = isPathReachable(player2D.x, player2D.y, exit2D.x, exit2D.y, tempMaze);
+                    attempts++;
+                    if (!solvable) {
+                        console.warn(`2D Maze Level ${currentLevel} not solvable, regenerating. Attempt ${attempts}`);
+                        if (attempts >= maxAttempts) {
+                            console.error(`Max attempts for 2D Maze Level ${currentLevel} reached. Maze might be unsolvable.`);
+                            break;
+                        }
+                    } else {
+                        maze2D = tempMaze;
+                    }
+                } while (!solvable && attempts < maxAttempts);
+
+                if (solvable) {
+                    console.log(`2D Maze Level ${currentLevel} solvable found in ${attempts} attempts.`);
+                }
+
+                if (animationFrameId2D) {
+                    cancelAnimationFrame(animationFrameId2D);
+                }
+                draw2D();
+            }
+        }
+
+        window.onload = startGame; // Ahora startGame está definida globalmente
+    </script>
+</body>
+</html>
