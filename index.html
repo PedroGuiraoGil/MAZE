@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laberinto Caleidoscópico: Edición Espacial</title>
+    <title>Edición Espacial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <style>
         /* Estilos generales */
         body {
@@ -21,41 +22,85 @@
             font-size: 2.5em;
             text-align: center;
             position: absolute;
-            top: 60px;
+            top: 20px;
             width: 100%;
             z-index: 10;
+            pointer-events: none;
         }
         
-        #gameModeSelector {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
+        /* --- NUEVA BARRA LATERAL DE CONTROLES --- */
+        #sidebarControls {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 140px;
+            background: rgba(12, 0, 26, 0.8);
+            backdrop-filter: blur(5px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 1000;
-            background: rgba(0,0,0,0.5);
-            padding: 10px;
-            border-radius: 10px;
             display: flex;
-            gap: 10px;
-            border: 1px solid rgba(255,255,255,0.2);
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px;
+            gap: 30px;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.5);
+        }
+
+        #gameModeSelector {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
         }
 
         .mode-button {
             background-color: #8a2be2;
             color: white;
-            padding: 8px 15px;
+            padding: 12px 15px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 0.9em;
+            font-size: 1em;
+            font-weight: bold;
             transition: all 0.3s ease;
+            width: 100%;
         }
         .mode-button:hover {
             background-color: #9932cc;
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            box-shadow: 0 4px 10px rgba(153, 50, 204, 0.4);
         }
 
+        #levelNavigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: auto; /* Empuja la navegación hacia abajo */
+        }
+
+        .nav-button {
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .nav-button:hover {
+            background-color: #555;
+            transform: scale(1.1);
+        }
+        .nav-button:active {
+            transform: scale(1);
+        }
 
         /* --- Estilos del Juego 2D --- */
         .game-container-2d {
@@ -87,35 +132,28 @@
             box-shadow: 0 0 15px rgba(102, 255, 255, 0.7);
         }
         .game-message-2d { margin-top: 20px; font-size: 1.2em; font-weight: bold; color: #fff; text-align: center; min-height: 1.5em; }
-        .instructions-2d { display: none; } /* Ocultado */
         .current-level-2d { margin-top: 10px; font-size: 1.5em; font-weight: bold; color: #ffcc00; text-shadow: 0 0 8px #ffcc00; }
-        .button-container-2d { display: flex; gap: 15px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
-        .button-2d { background-color: #8a2be2; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 1em; transition: background-color 0.3s ease, transform 0.2s ease; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
-        .button-2d:hover { background-color: #9932cc; transform: translateY(-2px); }
-        .button-2d:active { transform: translateY(0); box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); }
-
+        
         /* --- Estilos del Juego 3D (Laberinto) --- */
         #gameContainer3D { position: relative; width: 100vw; height: 100vh; display: none; background: #000; }
         #gameContainer3D canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
         #winMessage3D { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 200; background: rgba(0,0,0,0.9); color: #00ff00; padding: 30px; border-radius: 10px; text-align: center; font-size: 24px; display: none; box-shadow: 0 0 20px rgba(0,255,0,0.5); }
         #minimap3D { position: absolute; top: 20px; right: 20px; width: 200px; height: 200px; background: rgba(0,0,0,0.7); border: 2px solid #444; border-radius: 10px; z-index: 100; padding: 10px; }
         #minimapCanvas3D { width: 100%; height: 100%; image-rendering: pixelated; }
-        #controls3D { position: absolute; bottom: 20px; left: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; z-index: 100; font-size: 14px; }
-        .control-item-3d { margin: 5px 0; }
+        #controls3D { position: absolute; bottom: 20px; right: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; z-index: 100; font-size: 14px; }
         .button-3d { background: #333; color: white; border: none; padding: 10px 20px; margin: 5px; border-radius: 5px; cursor: pointer; font-size: 14px; }
         .button-3d:hover { background: #555; }
-        #compass3D { position: absolute; top: 20px; left: 20px; width: 80px; height: 80px; background: rgba(0,0,0,0.7); border: 2px solid #444; border-radius: 50%; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; }
+        #compass3D { position: absolute; top: 20px; left: 160px; /* Ajustado para la barra lateral */ width: 80px; height: 80px; background: rgba(0,0,0,0.7); border: 2px solid #444; border-radius: 50%; z-index: 100; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; }
         #compassArrow3D { transition: transform 0.2s ease; }
         #level3D { color: #ffcc00; font-size: 1.2em; margin-bottom: 5px; }
 
         /* --- Estilos del Juego 3D (Espacio) --- */
         #gameContainerSpace { position: relative; width: 100vw; height: 100vh; display: none; background: #000; }
-        #uiSpace { position: absolute; top: 10px; left: 10px; color: white; z-index: 100; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; font-size: 14px; }
+        #uiSpace { position: absolute; top: 10px; left: 160px; /* Ajustado para la barra lateral */ color: white; z-index: 100; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 8px; font-size: 14px; }
         #minimapSpace { position: absolute; top: 10px; right: 10px; width: 200px; height: 200px; background: rgba(0,0,0,0.8); border: 2px solid #fff; border-radius: 50%; z-index: 100; cursor: grab; transition: transform 0.2s ease; }
         #minimapSpace:hover { transform: scale(1.1); border-color: #ffd700; }
         #minimapSpace:active { cursor: grabbing; }
         #minimapControlsSpace { position: absolute; top: 220px; right: 10px; color: white; font-size: 10px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 4px; width: 200px; text-align: center; }
-        #instructionsSpace { display: none; } /* Ocultado */
         #crosshairSpace { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 20px; height: 20px; z-index: 50; pointer-events: none; }
         #crosshairSpace::before, #crosshairSpace::after { content: ''; position: absolute; background: rgba(255,255,255,0.8); }
         #crosshairSpace::before { left: 50%; top: 20%; width: 2px; height: 60%; transform: translateX(-50%); }
@@ -123,25 +161,25 @@
     </style>
 </head>
 <body>
-    <div id="gameModeSelector">
-        <button class="mode-button" onclick="jumpTo2D()">Jugar 2D (Niveles 1-9)</button>
-        <button class="mode-button" onclick="jumpTo3DMaze()">Jugar Laberinto 3D (Niveles 10-19)</button>
-        <button class="mode-button" onclick="jumpToSpace()">Jugar Modo Espacio (Nivel Final)</button>
+    <div id="sidebarControls">
+        <div id="gameModeSelector">
+            <button class="mode-button" onclick="jumpTo2D()">2D</button>
+            <button class="mode-button" onclick="jumpTo3DMaze()">3D</button>
+            <button class="mode-button" onclick="jumpToSpace()">Espacio</button>
+        </div>
+        <div id="levelNavigation">
+            <button id="prevLevelBtn" class="nav-button">←</button>
+            <button id="nextLevelBtn" class="nav-button">→</button>
+        </div>
     </div>
 
-    <h1 id="mainTitle">Laberinto Caleidoscópico</h1>
+    <h1 id="mainTitle"></h1>
 
     <!-- Contenedor para los niveles 2D -->
     <div id="gameContainer2D" class="game-container-2d">
         <div id="currentLevel2D" class="current-level-2d">Nivel: 1</div>
         <canvas id="gameCanvas2D"></canvas>
         <div id="gameMessage2D" class="game-message-2d"></div>
-        <div class="instructions-2d"></div>
-        <div class="button-container-2d">
-            <button id="prevLevelButton2D" class="button-2d">Nivel Anterior</button>
-            <button id="nextLevelButton2D" class="button-2d" style="display: none;">Siguiente Nivel</button>
-            <button id="forceNextLevelButton2D" class="button-2d">Saltar Nivel</button>
-        </div>
     </div>
 
     <!-- Contenedor para el Nivel 10 (3D Laberinto) -->
@@ -150,15 +188,10 @@
         <div id="minimap3D"><canvas id="minimapCanvas3D"></canvas></div>
         <div id="controls3D">
             <div id="level3D"></div>
-            <div class="button-container-3d" style="margin-top: 10px; display: flex; gap: 10px;">
-                <button id="prevLevelButton3D" class="button-3d">Nivel Anterior</button>
-                <button id="forceNextLevelButton3D" class="button-3d">Saltar Nivel</button>
-            </div>
         </div>
         <div id="winMessage3D">
             <h2>¡Felicidades!</h2><p>Has encontrado la salida</p>
-            <button class="button-3d" onclick="changeLevel(1)">Siguiente Nivel</button>
-            <button class="button-3d" onclick="returnTo2DLevels()">Volver a 2D</button>
+            <p style="font-size: 16px; color: #ccc;">Usa la flecha (→) para continuar</p>
         </div>
     </div>
 
@@ -173,15 +206,6 @@
             <div>Distancia al objetivo: <span id="distanceSpace">Calculando...</span></div>
             <div>Posición: <span id="positionSpace">0, 0, 0</span></div>
             <div>Velocidad: <span id="speedSpace">0</span></div>
-             <button class="button-3d" onclick="returnTo2DLevels()" style="margin-top:10px;">Volver a 2D</button>
-        </div>
-        <div id="instructionsSpace">
-            <strong>Controles:</strong><br>
-            • ↑↓: Adelante/Atrás | ←→: Girar<br>
-            • Shift + ↑↓: Subir/Bajar | Space: Frenar<br>
-            • R: Reiniciar | C: Volver al centro<br>
-            • Mouse: Mirar y navegar (click para activar)<br>
-            • Click / Doble Click: Impulso adelante
         </div>
         <div id="minimapControlsSpace">
             🗺️ Mini-Mapa Rotativo 3D<br>
@@ -226,31 +250,43 @@
             if (window.animationFrameId2D) cancelAnimationFrame(window.animationFrameId2D);
             if (window.animationFrameId3D) {
                 cancelAnimationFrame(window.animationFrameId3D);
-                if(game3D) game3D.removeControls(); // Important: remove listeners
+                if(game3D) game3D.removeControls();
             }
             if (window.animationFrameIdSpace) {
                 cancelAnimationFrame(window.animationFrameIdSpace);
-                if(gameSpace) gameSpace.removeControls(); // Important: remove listeners
+                if(gameSpace) gameSpace.removeControls();
             }
 
             document.getElementById('gameContainer2D').style.display = 'none';
             document.getElementById('gameContainer3D').style.display = 'none';
             document.getElementById('gameContainerSpace').style.display = 'none';
-            document.getElementById('mainTitle').style.display = 'none';
+            document.getElementById('mainTitle').style.display = 'none'; // Ocultar el h1 vacío
         }
         
         function jumpTo2D() { changeLevel(1 - currentLevel); }
         function jumpTo3DMaze() { changeLevel(FIRST_3D_MAZE_LEVEL - currentLevel); }
         function jumpToSpace() { changeLevel(FIRST_SPACE_LEVEL - currentLevel); }
 
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevLevelBtn');
+            const nextBtn = document.getElementById('nextLevelBtn');
+            
+            prevBtn.style.display = (currentLevel <= 1) ? 'none' : 'flex';
+            nextBtn.style.display = (currentLevel >= difficultyLevels.length) ? 'none' : 'flex';
+        }
+
         function changeLevel(direction) {
             let newLevel = currentLevel + direction;
             if (newLevel < 1) newLevel = 1;
             if (newLevel > difficultyLevels.length) newLevel = difficultyLevels.length;
+            
+            if (newLevel === currentLevel && direction !== 0) return; // No cambiar si ya está en el límite
+            
             currentLevel = newLevel;
             
             const levelConfig = difficultyLevels[currentLevel - 1];
             stopAllGames();
+            updateNavigationButtons();
 
             switch(levelConfig.type) {
                 case '2D':
@@ -278,25 +314,67 @@
         const ctx2D = canvas2D.getContext('2d');
         const gameMessage2D = document.getElementById('gameMessage2D');
         const currentLevelDisplay2D = document.getElementById('currentLevel2D');
-        const nextLevelButton2D = document.getElementById('nextLevelButton2D');
-        const prevLevelButton2D = document.getElementById('prevLevelButton2D');
-        const forceNextLevelButton2D = document.getElementById('forceNextLevelButton2D');
         
         let maze2D = [], player2D = { x: 0, y: 0 }, exit2D = { x: 0, y: 0 };
-        let hue = 0, animationFrameId2D;
+        let hue = 0, animationFrameId2D = null;
         let COLS_2D, ROWS_2D, TILE_SIZE_2D;
+        
+        function reset2DGame() {
+            if (animationFrameId2D) {
+                cancelAnimationFrame(animationFrameId2D);
+                animationFrameId2D = null;
+            }
+            maze2D = [];
+            player2D = { x: 0, y: 0 };
+            exit2D = { x: 0, y: 0 };
+            COLS_2D = 0;
+            ROWS_2D = 0;
+            TILE_SIZE_2D = 0;
+            hue = 0;
+            ctx2D.clearRect(0, 0, canvas2D.width, canvas2D.height);
+        }
 
         function getHSLColor(h, s, l) { return `hsl(${h}, ${s}%, ${l}%)`; }
         function isPointInShape(px, py, shape, centerX, centerY, shapeParams) { const { radius, size, hexRadius } = shapeParams; if (shape === 'square') return true; if (shape === 'circle') { const dist = Math.sqrt(Math.pow(px - centerX, 2) + Math.pow(py - centerY, 2)); return dist <= radius; } if (shape === 'triangle') { const p1 = { x: centerX, y: centerY - size }; const p2 = { x: centerX + size * Math.sqrt(3) / 2, y: centerY + size / 2 }; const p3 = { x: centerX - size * Math.sqrt(3) / 2, y: centerY + size / 2 }; const sign = (p1x, p1y, p2x, p2y, p3x, p3y) => (p1x - p3x) * (p2y - p3y) - (p2x - p3x) * (p1y - p3y); const s1 = sign(px, py, p1.x, p1.y, p2.x, p2.y); const s2 = sign(px, py, p2.x, p2.y, p3.x, p3.y); const s3 = sign(px, py, p3.x, p3.y, p1.x, p1.y); return (s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0); } if (shape === 'hexagon') { const angle = Math.atan2(py - centerY, px - centerX); const distance = Math.sqrt(Math.pow(px - centerX, 2) + Math.pow(py - centerY, 2)); const segmentAngle = Math.PI / 3; let normalizedAngle = angle % (2 * Math.PI); if (normalizedAngle < 0) normalizedAngle += (2 * Math.PI); const segmentIndex = Math.floor(normalizedAngle / segmentAngle); const angleInSegment = normalizedAngle - (segmentIndex * segmentAngle); const r = hexRadius; const apothem = r * Math.cos(Math.PI / 6); const maxDistAtAngle = apothem / Math.cos(angleInSegment - Math.PI / 6); return distance <= maxDistAtAngle; } return true; }
         function isPathReachable(startX, startY, targetX, targetY, currentMaze) { if (startX < 0 || startX >= COLS_2D || startY < 0 || startY >= ROWS_2D || currentMaze[startY][startX] === 1) return false; if (targetX < 0 || targetX >= COLS_2D || targetY < 0 || targetY >= ROWS_2D || currentMaze[targetY][targetX] === 1) return false; const queue = [{ x: startX, y: startY }]; const visited = new Set(); visited.add(`${startX},${startY}`); const directions = [{ dx: 0, dy: -1 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 1, dy: 0 }]; while (queue.length > 0) { const { x, y } = queue.shift(); if (x === targetX && y === targetY) return true; for (const dir of directions) { const nx = x + dir.dx; const ny = y + dir.dy; if (nx >= 0 && nx < COLS_2D && ny >= 0 && ny < ROWS_2D && currentMaze[ny][nx] !== 1 && !visited.has(`${nx},${ny}`)) { visited.add(`${nx},${ny}`); queue.push({ x: nx, y: ny }); } } } return false; }
-        function generateMaze2D() { maze2D = Array(ROWS_2D).fill(0).map(() => Array(COLS_2D).fill(1)); const stack = []; let startX = 0; let startY = 0; maze2D[startY][startX] = 0; stack.push({ x: startX, y: startY }); const directions = [{ dx: 0, dy: -2 }, { dx: 0, dy: 2 }, { dx: -2, dy: 0 }, { dx: 2, dy: 0 }]; while (stack.length > 0) { const current = stack[stack.length - 1]; const neighbors = []; for (const dir of directions) { const nx = current.x + dir.dx; const ny = current.y + dir.dy; if (nx >= 0 && nx < COLS_2D && ny >= 0 && ny < ROWS_2D && maze2D[ny][nx] === 1) { neighbors.push({ x: nx, y: ny, wallX: current.x + dir.dx / 2, wallY: current.y + dir.dy / 2 }); } } if (neighbors.length > 0) { const next = neighbors[Math.floor(Math.random() * neighbors.length)]; maze2D[next.y][next.x] = 0; maze2D[next.wallY][next.wallX] = 0; stack.push({ x: next.x, y: next.y }); } else { stack.pop(); } } }
+        
+        function generateBaseMaze() {
+            let newMaze = Array(ROWS_2D).fill(0).map(() => Array(COLS_2D).fill(1));
+            const stack = [];
+            let startX = 0;
+            let startY = 0;
+            newMaze[startY][startX] = 0;
+            stack.push({ x: startX, y: startY });
+            const directions = [{ dx: 0, dy: -2 }, { dx: 0, dy: 2 }, { dx: -2, dy: 0 }, { dx: 2, dy: 0 }];
+            while (stack.length > 0) {
+                const current = stack[stack.length - 1];
+                const neighbors = [];
+                for (const dir of directions) {
+                    const nx = current.x + dir.dx;
+                    const ny = current.y + dir.dy;
+                    if (nx >= 0 && nx < COLS_2D && ny >= 0 && ny < ROWS_2D && newMaze[ny][nx] === 1) {
+                        neighbors.push({ x: nx, y: ny, wallX: current.x + dir.dx / 2, wallY: current.y + dir.dy / 2 });
+                    }
+                }
+                if (neighbors.length > 0) {
+                    const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                    newMaze[next.y][next.x] = 0;
+                    newMaze[next.wallY][next.wallX] = 0;
+                    stack.push({ x: next.x, y: next.y });
+                } else {
+                    stack.pop();
+                }
+            }
+            return newMaze;
+        }
+
         function applyShapeToMaze2D(currentMaze, shape) { const centerX = canvas2D.width / 2; const centerY = canvas2D.height / 2; const radius = Math.min(canvas2D.width, canvas2D.height) / 2 * 0.995; const size = Math.min(canvas2D.width, canvas2D.height) * 0.495; const hexRadius = Math.min(canvas2D.width, canvas2D.height) / 2 * 0.99; const shapeParams = { radius, size, hexRadius }; for (let y = 0; y < ROWS_2D; y++) { for (let x = 0; x < COLS_2D; x++) { const cellCenterX = x * TILE_SIZE_2D + TILE_SIZE_2D / 2; const cellCenterY = y * TILE_SIZE_2D + TILE_SIZE_2D / 2; if (!isPointInShape(cellCenterX, cellCenterY, shape, centerX, centerY, shapeParams)) { currentMaze[y][x] = 1; } } } }
         function findAndGuaranteeStartExitPoints2D(mazeToModify, shape) { const centerX = canvas2D.width / 2; const centerY = canvas2D.height / 2; const radius = Math.min(canvas2D.width, canvas2D.height) / 2 * 0.995; const size = Math.min(canvas2D.width, canvas2D.height) * 0.495; const hexRadius = Math.min(canvas2D.width, canvas2D.height) / 2 * 0.99; const shapeParams = { radius, size, hexRadius }; function findFirstValidPathCellInArea(startRow, startCol, rowIncrement, colIncrement) { for (let y = startRow; (rowIncrement > 0 ? y < ROWS_2D : y >= 0); y += rowIncrement) { for (let x = startCol; (colIncrement > 0 ? x < COLS_2D : x >= 0); x += colIncrement) { const cellCenterX = x * TILE_SIZE_2D + TILE_SIZE_2D / 2; const cellCenterY = y * TILE_SIZE_2D + TILE_SIZE_2D / 2; if (mazeToModify[y][x] === 0 && isPointInShape(cellCenterX, cellCenterY, shape, centerX, centerY, shapeParams)) { return { x, y }; } } } return null; } let tempPlayerPos = { x: 0, y: 0 }; let tempExitPos = { x: COLS_2D - 1, y: ROWS_2D - 1 }; let foundPlayerPos = findFirstValidPathCellInArea(0, 0, 1, 1); if (foundPlayerPos) { tempPlayerPos = foundPlayerPos; } else { console.error("No valid starting path found! Defaulting to (0,0)."); if (0 < ROWS_2D && 0 < COLS_2D) mazeToModify[0][0] = 0; } if (tempPlayerPos.y < ROWS_2D && tempPlayerPos.x < COLS_2D) mazeToModify[tempPlayerPos.y][tempPlayerPos.x] = 0; const neighbors = [{ dx: 1, dy: 0 }, { dx: 0, dy: 1 }, { dx: -1, dy: 0 }, { dx: 0, dy: -1 }]; for (const dir of neighbors) { const nx = tempPlayerPos.x + dir.dx; const ny = tempPlayerPos.y + dir.dy; if (nx >= 0 && nx < COLS_2D && ny >= 0 && ny < ROWS_2D) { const cellCenterX = nx * TILE_SIZE_2D + TILE_SIZE_2D / 2; const cellCenterY = ny * TILE_SIZE_2D + TILE_SIZE_2D / 2; if (isPointInShape(cellCenterX, cellCenterY, shape, centerX, centerY, shapeParams)) { mazeToModify[ny][nx] = 0; } } } let foundExitPos = findFirstValidPathCellInArea(ROWS_2D - 1, COLS_2D - 1, -1, -1); if (foundExitPos) { tempExitPos = foundExitPos; } else { console.error("No valid exit path found! Defaulting to (COLS-1,ROWS-1)."); if (COLS_2D - 1 < COLS_2D && ROWS_2D - 1 < ROWS_2D) mazeToModify[ROWS_2D - 1][COLS_2D - 1] = 0; } if (tempExitPos.y < ROWS_2D && tempExitPos.x < COLS_2D) mazeToModify[tempExitPos.y][tempExitPos.x] = 0; for (const dir of neighbors) { const nx = tempExitPos.x + dir.dx; const ny = tempExitPos.y + dir.dy; if (nx >= 0 && nx < COLS_2D && ny >= 0 && ny < ROWS_2D) { const cellCenterX = nx * TILE_SIZE_2D + TILE_SIZE_2D / 2; const cellCenterY = ny * TILE_SIZE_2D + TILE_SIZE_2D / 2; if (isPointInShape(cellCenterX, cellCenterY, shape, centerX, centerY, shapeParams)) { mazeToModify[ny][nx] = 0; } } } return { playerPos: tempPlayerPos, exitPos: tempExitPos }; }
         function draw2D() { ctx2D.clearRect(0, 0, canvas2D.width, canvas2D.height); const levelSettings = difficultyLevels[currentLevel - 1]; const hueSpeed = levelSettings.hueSpeed; const fogOfWar = levelSettings.fogOfWar; const visibilityRadius = 3; hue = (hue + hueSpeed) % 360; for (let y = 0; y < ROWS_2D; y++) { for (let x = 0; x < COLS_2D; x++) { const cellX = x * TILE_SIZE_2D; const cellY = y * TILE_SIZE_2D; const cellType = maze2D[y][x]; let isVisible = true; if (fogOfWar) { const dist = Math.sqrt(Math.pow(x - player2D.x, 2) + Math.pow(y - player2D.y, 2)); if (dist > visibilityRadius) { isVisible = false; } } if (isVisible) { if (cellType === 1) { ctx2D.fillStyle = '#4a0080'; ctx2D.fillRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D); ctx2D.strokeStyle = '#6a00b0'; ctx2D.lineWidth = 1; ctx2D.strokeRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D); } else { const dynamicHue = (hue + (x * 5) + (y * 5)) % 360; ctx2D.fillStyle = getHSLColor(dynamicHue, 80, 40); ctx2D.fillRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D); ctx2D.strokeStyle = getHSLColor(dynamicHue, 90, 60); ctx2D.lineWidth = 1; ctx2D.strokeRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D); if (x === exit2D.x && y === exit2D.y) { ctx2D.fillStyle = 'rgba(0, 255, 0, 0.7)'; ctx2D.fillRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D); ctx2D.strokeStyle = '#00ff00'; ctx2D.lineWidth = 2; ctx2D.strokeRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D); } } } else { ctx2D.fillStyle = '#100020'; ctx2D.fillRect(cellX, cellY, TILE_SIZE_2D, TILE_SIZE_2D); } } } ctx2D.fillStyle = '#ffcc00'; ctx2D.beginPath(); ctx2D.arc(player2D.x * TILE_SIZE_2D + TILE_SIZE_2D / 2, player2D.y * TILE_SIZE_2D + TILE_SIZE_2D / 2, TILE_SIZE_2D / 3, 0, Math.PI * 2); ctx2D.fill(); ctx2D.strokeStyle = '#fff'; ctx2D.lineWidth = 2; ctx2D.stroke(); animationFrameId2D = requestAnimationFrame(draw2D); }
-        function movePlayer2D(dx, dy) { const newX = player2D.x + dx; const newY = player2D.y + dy; if (newX >= 0 && newX < COLS_2D && newY >= 0 && newY < ROWS_2D && maze2D[newY][newX] !== 1) { player2D.x = newX; player2D.y = newY; if (player2D.x === exit2D.x && player2D.y === exit2D.y) { gameMessage2D.style.color = 'lime'; gameMessage2D.textContent = `¡Felicidades! Nivel ${currentLevel} completado.`; cancelAnimationFrame(animationFrameId2D); nextLevelButton2D.style.display = 'block'; } else { gameMessage2D.textContent = ""; } } else { gameMessage2D.textContent = ""; } }
+        function movePlayer2D(dx, dy) { const newX = player2D.x + dx; const newY = player2D.y + dy; if (newX >= 0 && newX < COLS_2D && newY >= 0 && newY < ROWS_2D && maze2D[newY][newX] !== 1) { player2D.x = newX; player2D.y = newY; if (player2D.x === exit2D.x && player2D.y === exit2D.y) { gameMessage2D.style.color = 'lime'; gameMessage2D.textContent = `¡Nivel ${currentLevel} completado!`; cancelAnimationFrame(animationFrameId2D); setTimeout(() => changeLevel(1), 1500); } else { gameMessage2D.textContent = ""; } } else { gameMessage2D.textContent = ""; } }
         
         document.addEventListener('keydown', (e) => {
-            if (document.getElementById('gameContainer2D').style.display !== 'none' && nextLevelButton2D.style.display === 'none') {
+            if (document.getElementById('gameContainer2D').style.display !== 'none') {
                 e.preventDefault();
                 gameMessage2D.textContent = "";
                 switch(e.key) {
@@ -308,17 +386,16 @@
             }
         });
 
-        nextLevelButton2D.addEventListener('click', () => changeLevel(1));
-        prevLevelButton2D.addEventListener('click', () => changeLevel(-1));
-        forceNextLevelButton2D.addEventListener('click', () => { if (nextLevelButton2D.style.display === 'none') changeLevel(1); });
+        document.getElementById('prevLevelBtn').addEventListener('click', () => changeLevel(-1));
+        document.getElementById('nextLevelBtn').addEventListener('click', () => changeLevel(1));
 
         function startGame2D() {
+            reset2DGame();
+            
             document.getElementById('gameContainer2D').style.display = 'flex';
             currentLevelDisplay2D.textContent = `Nivel: ${currentLevel}`;
-            nextLevelButton2D.style.display = 'none';
             gameMessage2D.textContent = "";
 
-            let solvable = false, attempts = 0, maxAttempts = 2000;
             let currentLevelSettings = { ...difficultyLevels[currentLevel - 1] };
             if (currentLevelSettings.isRandom) {
                 const randomIndex = Math.floor(Math.random() * 7);
@@ -332,20 +409,41 @@
             canvas2D.width = COLS_2D * TILE_SIZE_2D;
             canvas2D.height = ROWS_2D * TILE_SIZE_2D;
 
+            let solvable = false;
+            let attempts = 0;
+            const maxAttempts = 2000;
+            
+            let finalMaze, finalPlayerPos, finalExitPos;
+
             do {
-                generateMaze2D();
-                let tempMaze = JSON.parse(JSON.stringify(maze2D));
-                if (currentLevelSettings.shape && currentLevelSettings.shape !== 'square') applyShapeToMaze2D(tempMaze, currentLevelSettings.shape);
-                const { playerPos, exitPos } = findAndGuaranteeStartExitPoints2D(tempMaze, currentLevelSettings.shape);
-                player2D = playerPos;
-                exit2D = exitPos;
-                solvable = isPathReachable(player2D.x, player2D.y, exit2D.x, exit2D.y, tempMaze);
+                let tempMaze = generateBaseMaze();
+                
+                if (currentLevelSettings.shape && currentLevelSettings.shape !== 'square') {
+                    applyShapeToMaze2D(tempMaze, currentLevelSettings.shape);
+                }
+                
+                const positions = findAndGuaranteeStartExitPoints2D(tempMaze, currentLevelSettings.shape);
+                
+                solvable = isPathReachable(positions.playerPos.x, positions.playerPos.y, positions.exitPos.x, positions.exitPos.y, tempMaze);
                 attempts++;
-                if (!solvable && attempts >= maxAttempts) { console.error(`Max attempts for 2D Maze reached.`); break; }
-                if (solvable) maze2D = tempMaze;
+
+                if (solvable) {
+                    finalMaze = tempMaze;
+                    finalPlayerPos = positions.playerPos;
+                    finalExitPos = positions.exitPos;
+                } else if (attempts >= maxAttempts) {
+                    console.error(`Se alcanzó el máximo de intentos para el Laberinto 2D. Se usará el último intento.`);
+                    finalMaze = tempMaze; 
+                    finalPlayerPos = positions.playerPos;
+                    finalExitPos = positions.exitPos;
+                    break; 
+                }
             } while (!solvable);
             
-            if (animationFrameId2D) cancelAnimationFrame(animationFrameId2D);
+            maze2D = finalMaze;
+            player2D = finalPlayerPos;
+            exit2D = finalExitPos;
+
             draw2D();
         }
 
@@ -909,14 +1007,6 @@
             }
             gameSpace.newGame();
         }
-        
-        document.getElementById('prevLevelButton3D').addEventListener('click', () => changeLevel(-1));
-        document.getElementById('forceNextLevelButton3D').addEventListener('click', () => {
-            if (game3D && game3D.winMessageElement.style.display === 'none') {
-                changeLevel(1);
-            }
-        });
-
     </script>
 </body>
 </html>
